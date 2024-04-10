@@ -9,6 +9,7 @@ choice
 
 config BOARD_MT7620_RFB
 	bool "MediaTek MT7620 RFB"
+	select TPL
 	help
 	  The reference design of MT7620A (WS2120). The board has 64 MiB DDR2,
 	  8 MiB SPI-NOR flash, 1 built-in 6 port switch (two GE PHYs and five

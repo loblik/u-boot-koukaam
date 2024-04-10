@@ -179,10 +179,12 @@ int print_cpuinfo(void)
 	return 0;
 }
 
+#ifndef CONFIG_SPL_BUILD
 ulong notrace get_tbclk(void)
 {
 	return gd->arch.timer_freq;
 }
+#endif
 
 void _machine_restart(void)
 {

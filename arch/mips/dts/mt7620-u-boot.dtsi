@@ -5,10 +5,45 @@
  * Author: Weijie Gao <weijie.gao@mediatek.com>
  */
 
+#include <linux/stringify.h>
+
+/ {
+	binman: binman {
+		multiple-images;
+	};
+};
+
 &uartlite {
 	bootph-all;
 };
 
 &uartfull {
 	bootph-all;
+};
+
+&spi0 {
+	bootph-all;
+};
+
+&binman {
+
+	flash-bin {
+		filename = "flash.bin";
+
+		u-boot-tpl {
+			filename = "tpl/u-boot-tpl.bin";
+			type = "u-boot-tpl";
+//			entry = <CONFIG_SPL_TEXT_BASE>;
+		};
+
+		u-boot-spl {
+			filename = "spl/u-boot-spl.bin";
+			type = "u-boot-spl";
+		};
+
+		u-boot {
+			filename = "u-boot-lzma.img";
+			type = "u-boot-img";
+		};
+	};
 };

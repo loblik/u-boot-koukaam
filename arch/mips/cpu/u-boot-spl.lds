@@ -13,6 +13,7 @@ SECTIONS
 
 	. = ALIGN(4);
 	.text : {
+        __image_copy_start = .;
 		__text_start = .;
 		*(.text*)
 		__text_end = .;

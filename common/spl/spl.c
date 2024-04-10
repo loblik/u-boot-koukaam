@@ -576,7 +576,7 @@ static int spl_load_image(struct spl_image_info *spl_image,
 	bootdev.boot_device_name = NULL;
 
 	ret = loader->load_image(spl_image, &bootdev);
-#ifdef CONFIG_SPL_LEGACY_IMAGE_CRC_CHECK
+#if CONFIG_IS_ENABLED(LEGACY_IMAGE_CRC_CHECK)
 	if (!ret && spl_image->dcrc_length) {
 		/* check data crc */
 		ulong dcrc = crc32_wd(0, (unsigned char *)spl_image->dcrc_data,

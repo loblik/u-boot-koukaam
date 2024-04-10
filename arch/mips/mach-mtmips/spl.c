@@ -7,10 +7,13 @@
 
 #include <init.h>
 #include <spl.h>
+#include <asm/global_data.h>
 #include <asm/sections.h>
 #include <linux/libfdt.h>
 #include <linux/sizes.h>
 #include <mach/serial.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 void __noreturn board_init_f(ulong dummy)
 {
@@ -30,7 +33,11 @@ void __noreturn board_init_f(ulong dummy)
 
 void board_boot_order(u32 *spl_boot_list)
 {
-	spl_boot_list[0] = BOOT_DEVICE_NOR;
+#if defined(CONFIG_TPL_BUILD)
+	spl_boot_list[0] = BOOT_DEVICE_RAM;
+#else
+	spl_boot_list[0] = BOOT_DEVICE_SPI;
+#endif
 }
 
 unsigned long spl_nor_get_uboot_base(void)

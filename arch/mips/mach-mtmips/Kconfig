@@ -73,6 +73,11 @@ config SOC_MT7620
 	select SPL_OF_CONTROL if SPL_DM
 	select SPL_OF_PLATDATA if SPL_DM
 	select SPL_DM_SERIAL if SPL_DM
+	select BINMAN
+	select SUPPORT_TPL
+	select TPL_OF_PLATDATA if TPL_DM
+	select TPL_OF_CONTROL if TPL_DM
+	select TPL_LOAD_FIT
 	help
 	  This supports MediaTek MT7620.
 

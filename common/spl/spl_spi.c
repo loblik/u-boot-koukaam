@@ -21,6 +21,8 @@
 #include <asm/io.h>
 #include <dm/ofnode.h>
 
+binman_sym_declare(ulong, u_boot_any, offset);
+
 static ulong spl_spi_fit_read(struct spl_load_info *load, ulong sector,
 			      ulong count, void *buf)
 {
@@ -36,7 +38,10 @@ static ulong spl_spi_fit_read(struct spl_load_info *load, ulong sector,
 
 unsigned int __weak spl_spi_get_uboot_offs(struct spi_flash *flash)
 {
-	return CONFIG_SYS_SPI_U_BOOT_OFFS;
+	return binman_sym(ulong, u_boot_any, offset);
+	//return spl_get_image_pos();
+	//ulong u_boot_size = spl_get_image_size();
+	//return CONFIG_SYS_SPI_U_BOOT_OFFS;
 }
 
 u32 __weak spl_spi_boot_bus(void)

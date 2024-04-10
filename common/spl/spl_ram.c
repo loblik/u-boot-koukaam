@@ -9,6 +9,8 @@
  * Michal Simek <michal.simek@amd.com>
  * Stefan Agner <stefan.agner@toradex.com>
  */
+#define LOG_DEBUG 1
+
 #include <common.h>
 #include <binman_sym.h>
 #include <image.h>
@@ -16,6 +18,10 @@
 #include <mapmem.h>
 #include <spl.h>
 #include <linux/libfdt.h>
+
+#ifdef CONFIG_TPL
+binman_sym_declare(ulong, u_boot_spl_any, entry);
+#endif
 
 static ulong spl_ram_load_read(struct spl_load_info *load, ulong sector,
 			       ulong count, void *buf)
@@ -45,6 +51,20 @@ static int spl_ram_load_image(struct spl_image_info *spl_image,
 	ulong addr = 0;
 	int ret;
 
+	ulong u_boot_pos = spl_get_image_pos();
+	ulong u_boot_size = spl_get_image_size();
+	//debug("SPL flash offset: %lx size: %lx\n", u_boot_pos, u_boot_size);
+
+	memcpy(CONFIG_SPL_TEXT_BASE, u_boot_pos, u_boot_size);
+
+	spl_image->size = u_boot_size;
+	spl_image->entry_point = CONFIG_SPL_TEXT_BASE;
+	spl_image->load_addr = CONFIG_SPL_TEXT_BASE;
+	spl_image->os = IH_OS_U_BOOT;
+	spl_image->name = "U-Boot SPL";
+
+	return 0;
+#if 0
 	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT)) {
 		addr = IF_ENABLED_INT(CONFIG_SPL_LOAD_FIT,
 				      CONFIG_SPL_LOAD_FIT_ADDRESS);
@@ -95,6 +115,7 @@ static int spl_ram_load_image(struct spl_image_info *spl_image,
 
 		ret = spl_parse_image_header(spl_image, bootdev, header);
 	}
+#endif
 
 	return ret;
 }

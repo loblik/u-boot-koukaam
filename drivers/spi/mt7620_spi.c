@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0
+
 /*
  * Copyright (C) 2020 MediaTek Inc.
  *
@@ -15,6 +15,12 @@
 #include <linux/iopoll.h>
 #include <linux/io.h>
 #include <linux/log2.h>
+#include <linux/delay.h>
+#include <hexdump.h>
+
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+#include <dt-structs.h>
+#endif
 
 #define MT7620_SPI_NUM_CS	2
 #define MT7620_SPI_MASTER1_OFF	0x00
@@ -52,6 +58,9 @@ struct mt7620_spi_master_regs {
 };
 
 struct mt7620_spi {
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+	struct dtd_mt7620_spi dtplat;
+#endif
 	void __iomem *regs;
 	struct mt7620_spi_master_regs *m[MT7620_SPI_NUM_CS];
 	unsigned int sys_freq;
@@ -157,8 +166,9 @@ static int mt7620_spi_read(struct mt7620_spi *ms, int cs, u8 *buf, size_t len)
 		setbits_32(&ms->m[cs]->ctl, START_RD);
 
 		ret = mt7620_spi_busy_poll(ms, cs);
-		if (ret)
+		if (ret) {
 			return ret;
+		}
 
 		*buf++ = (u8)readl(&ms->m[cs]->data);
 
@@ -234,9 +244,24 @@ static int mt7620_spi_probe(struct udevice *dev)
 	struct clk clk;
 	int ret;
 
+#define SYSCTL_BASE                     0x10000000
+#define RST_BASE						0x10000034
+#define CLKCFG1_REG			0x30
+#define SYSCTL_GPIOMODE_REG     0x60
+#define SPI_RST                 18
+
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+	ms->regs = (void __iomem*)0x10000b00;
+	ms->sys_freq = 193333333;
+
+	ms->m[0] = ms->regs + MT7620_SPI_MASTER1_OFF;
+	ms->m[1] = ms->regs + MT7620_SPI_MASTER2_OFF;
+#else
 	ms->regs = dev_remap_addr(dev);
-	if (!ms->regs)
+	if (!ms->regs) {
+		printf("mt7620 probe failed\n");
 		return -EINVAL;
+	}
 
 	ms->m[0] = ms->regs + MT7620_SPI_MASTER1_OFF;
 	ms->m[1] = ms->regs + MT7620_SPI_MASTER2_OFF;
@@ -254,6 +279,11 @@ static int mt7620_spi_probe(struct udevice *dev)
 		dev_err(dev, "mt7620_spi: Please provide a valid bus clock!\n");
 		return -EINVAL;
 	}
+#endif
+
+	setbits_32(RST_BASE, BIT(18));
+	//printf("resets  : %x\n", *(u32*)(RST_BASE));
+	clrbits_32(RST_BASE, BIT(18));
 
 	writel(ARB_EN, ms->regs + SPI_ARB);
 
@@ -271,11 +301,14 @@ static const struct udevice_id mt7620_spi_ids[] = {
 	{ }
 };
 
+DM_DRIVER_ALIAS(mt7620_spi, mediatek_mt7620_spi);
+
 U_BOOT_DRIVER(mt7620_spi) = {
 	.name = "mt7620_spi",
 	.id = UCLASS_SPI,
 	.of_match = mt7620_spi_ids,
 	.ops = &mt7620_spi_ops,
 	.priv_auto = sizeof(struct mt7620_spi),
+//	.plat_auto = sizeof(struct mt7620_spi),
 	.probe = mt7620_spi_probe,
 };
